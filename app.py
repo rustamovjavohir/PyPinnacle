@@ -1,5 +1,6 @@
 from webob import Request, Response
 from parse import parse
+import inspect
 
 
 class PyPinnacle:
@@ -17,6 +18,13 @@ class PyPinnacle:
         handler, kwargs = self.find_handler(request)
 
         if handler:
+            if inspect.isclass(handler):
+                handler = getattr(handler(), request.method.lower(), None)
+                if handler is None:
+                    response.status_code = 405
+                    response.text = f"Method Not Allowed {request.method}"
+                    return response
+            
             handler(request, response, **kwargs)
         else:
             self.default_response(response)
@@ -34,6 +42,9 @@ class PyPinnacle:
         response.text = "Not found"
 
     def route(self, path):
+        assert path not in self.routes, f"Such route {path} already exists."
+        # if path in self.routes:
+        #     raise AssertionError(f"Such route already exists. {path}")
 
         def wrapper(handler):
             self.routes[path] = handler
