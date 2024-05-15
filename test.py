@@ -125,4 +125,21 @@ def testt_template_handler(app, test_client):
     assert response.status_code == 200
     assert "PyPinnacle" in response.text
     assert "This is a template" in response.text
-    assert "text/html" in response.headers["Content-Type"] 
+    assert "text/html" in response.headers["Content-Type"]
+
+
+def test_custom_exeption_handler(app, test_client):
+
+    def on_exception(request, response, exc):
+        response.text = "Oops! Something went wrong."
+        # response.text = str(exc)
+
+    app.add_exception_handler(on_exception)
+
+    @app.route("/exception")
+    def exception_throwing_handler(request, response):
+        raise AttributeError("This handler should not be used")
+
+    response = test_client.get("http://testserver/exception")
+    assert response.text == "Oops! Something went wrong."
+

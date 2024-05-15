@@ -42,3 +42,16 @@ def template_handler(request, response):
         context={"title": "PyPinnacle", "body": "This is a template"},
     )
     response.content_type = "text/html"
+
+
+def on_exception(request, response, exc):
+    # response.text = "Oops! Something went wrong."
+    response.text = str(exc)
+
+
+# app.add_exception_handler(on_exception)
+
+
+@app.route("/exception")
+def exception_throwing_handler(request, response):
+    raise AttributeError("This handler should not be used")

@@ -14,6 +14,7 @@ class PyPinnacle:
         self.templates_env = Environment(
             loader=FileSystemLoader(os.path.abspath(templates_dir))
         )
+        self.exception_handler = None
 
     def __call__(self, environ, start_response):
         request = Request(environ=environ)
@@ -33,7 +34,13 @@ class PyPinnacle:
                     response.text = f"Method Not Allowed {request.method}"
                     return response
 
-            handler(request, response, **kwargs)
+            try:
+                handler(request, response, **kwargs)
+            except Exception as e:
+                if self.exception_handler:
+                    self.exception_handler(request, response, e)
+                else:
+                    raise e
         else:
             self.default_response(response)
         return response
@@ -71,3 +78,6 @@ class PyPinnacle:
         if context is None:
             context = {}
         return self.templates_env.get_template(template_name).render(**context).encode()
+
+    def add_exception_handler(self, exception_handler):
+        self.exception_handler = exception_handler
