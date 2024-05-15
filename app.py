@@ -1,6 +1,8 @@
 from webob import Request, Response
 from parse import parse
 import inspect
+import requests
+import wsgiadapter
 
 
 class PyPinnacle:
@@ -51,3 +53,11 @@ class PyPinnacle:
             return handler
 
         return wrapper
+    
+
+    def test_session(self):
+        session = requests.Session()
+        adapter = wsgiadapter.WSGIAdapter(self)
+        session.mount("http://testserver", adapter)
+        session.mount("https://testserver", adapter)
+        return session
