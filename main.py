@@ -26,3 +26,10 @@ class Books:
 
     def post(self, request, response):
         response.text = "Endpoint to create a book"
+
+
+def new_route(request, response):
+    response.text = "New Route"
+
+
+app.add_route("/new", new_route)

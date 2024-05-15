@@ -95,3 +95,16 @@ def test_class_based_handler_not_allowed_method(app, test_client):
 
     assert response.status_code == 405
     assert response.text == "Method Not Allowed GET"
+
+
+def test_alternative_route(app, test_client):
+
+    def home(request, response):
+        response.text = "From new home handler"
+
+    app.add_route("/home", home)
+
+    response = test_client.get("http://testserver/home")
+
+    assert response.status_code == 200
+    assert response.text == "From new home handler"
