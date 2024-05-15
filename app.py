@@ -3,11 +3,17 @@ from parse import parse
 import inspect
 import requests
 import wsgiadapter
+from jinja2 import Environment, FileSystemLoader
+import os
 
 
 class PyPinnacle:
-    def __init__(self) -> None:
+    def __init__(self, templates_dir="templates") -> None:
         self.routes = dict()
+
+        self.templates_env = Environment(
+            loader=FileSystemLoader(os.path.abspath(templates_dir))
+        )
 
     def __call__(self, environ, start_response):
         request = Request(environ=environ)
@@ -60,3 +66,8 @@ class PyPinnacle:
         session.mount("http://testserver", adapter)
         session.mount("https://testserver", adapter)
         return session
+
+    def template(self, template_name, context=None):
+        if context is None:
+            context = {}
+        return self.templates_env.get_template(template_name).render(**context).encode()

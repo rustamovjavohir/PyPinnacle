@@ -108,3 +108,21 @@ def test_alternative_route(app, test_client):
 
     assert response.status_code == 200
     assert response.text == "From new home handler"
+
+
+def testt_template_handler(app, test_client):
+
+    @app.route("/template")
+    def template_handler(request, response):
+        response.body = app.template(
+            "home.html",
+            context={"title": "PyPinnacle", "body": "This is a template"},
+        )
+        response.content_type = "text/html"
+
+    response = test_client.get("http://testserver/template")
+
+    assert response.status_code == 200
+    assert "PyPinnacle" in response.text
+    assert "This is a template" in response.text
+    assert "text/html" in response.headers["Content-Type"] 

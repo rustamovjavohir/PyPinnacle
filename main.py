@@ -33,3 +33,12 @@ def new_route(request, response):
 
 
 app.add_route("/new", new_route)
+
+
+@app.route("/template")
+def template_handler(request, response):
+    response.body = app.template(
+        "home.html",
+        context={"title": "PyPinnacle", "body": "This is a template"},
+    )
+    response.content_type = "text/html"
