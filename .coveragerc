@@ -1,0 +1,3 @@
+[run]
+
+omit= venv/*,venv2/*,main.py,conftest.py,test.py

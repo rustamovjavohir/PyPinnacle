@@ -1,10 +1,20 @@
 from webob import Request, Response
 from parse import parse
+import inspect
+import requests
+import wsgiadapter
+from jinja2 import Environment, FileSystemLoader
+import os
 
 
 class PyPinnacle:
-    def __init__(self) -> None:
+    def __init__(self, templates_dir="templates") -> None:
         self.routes = dict()
+
+        self.templates_env = Environment(
+            loader=FileSystemLoader(os.path.abspath(templates_dir))
+        )
+        self.exception_handler = None
 
     def __call__(self, environ, start_response):
         request = Request(environ=environ)
@@ -17,7 +27,20 @@ class PyPinnacle:
         handler, kwargs = self.find_handler(request)
 
         if handler:
-            handler(request, response, **kwargs)
+            if inspect.isclass(handler):
+                handler = getattr(handler(), request.method.lower(), None)
+                if handler is None:
+                    response.status_code = 405
+                    response.text = f"Method Not Allowed {request.method}"
+                    return response
+
+            try:
+                handler(request, response, **kwargs)
+            except Exception as e:
+                if self.exception_handler:
+                    self.exception_handler(request, response, e)
+                else:
+                    raise e
         else:
             self.default_response(response)
         return response
@@ -33,10 +56,28 @@ class PyPinnacle:
         response.status_code = 404
         response.text = "Not found"
 
-    def route(self, path):
+    def add_route(self, path, handler):
+        assert path not in self.routes, f"Such route {path} already exists."
+        self.routes[path] = handler
 
+    def route(self, path):
         def wrapper(handler):
-            self.routes[path] = handler
+            self.add_route(path, handler)
             return handler
 
         return wrapper
+
+    def test_session(self):
+        session = requests.Session()
+        adapter = wsgiadapter.WSGIAdapter(self)
+        session.mount("http://testserver", adapter)
+        session.mount("https://testserver", adapter)
+        return session
+
+    def template(self, template_name, context=None):
+        if context is None:
+            context = {}
+        return self.templates_env.get_template(template_name).render(**context).encode()
+
+    def add_exception_handler(self, exception_handler):
+        self.exception_handler = exception_handler
