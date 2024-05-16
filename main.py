@@ -1,4 +1,5 @@
 from app import PyPinnacle
+from middleware import Middleware
 
 app = PyPinnacle()
 
@@ -55,3 +56,25 @@ app.add_exception_handler(on_exception)
 @app.route("/exception")
 def exception_throwing_handler(request, response):
     raise AttributeError("This handler should not be used")
+
+
+class LogMiddleware(Middleware):
+
+    def process_request(self, request):
+        print("Processing request", request.url)
+
+    def process_response(self, request, response):
+        print("Processing response", request.url)
+
+
+class GettingMiddleware(Middleware):
+
+    def process_request(self, request):
+        print("Getting middleware", request.url)
+
+    def process_response(self, request, response):
+        print("Getting middleware response", request.url)
+
+
+app.add_middleware(LogMiddleware)
+# app.add_middleware(GettingMiddleware)

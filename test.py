@@ -2,6 +2,7 @@ import pytest
 import requests
 import wsgiadapter
 from conftest import app, test_client
+from middleware import Middleware
 
 
 def test_basic_route_adding(app):
@@ -149,8 +150,37 @@ def test_non_existent_static_file(test_client):
 
 
 def test_serving_static_file(test_client):
-    response = test_client.get("http://testserver/test.css")
+    response = test_client.get("http://testserver/static/test.css")
 
     assert response.status_code == 200
 
     assert response.text == "body {background-color: #f0f0f0;}"
+
+
+def test_middleware_method_call(app, test_client):
+    process_request_called = False
+    process_response_called = False
+
+    class TestMiddleware(Middleware):
+        def __init__(self, app):
+            super().__init__(app)
+
+        def process_request(self, request):
+            nonlocal process_request_called
+            process_request_called = True
+
+        def process_response(self, request, response):
+            nonlocal process_response_called
+            process_response_called = True
+
+    app.add_middleware(TestMiddleware)
+
+    @app.route("/home")
+    def home(request, response):
+        response.text = "Home"
+
+    response = test_client.get("http://testserver/home")
+
+    assert process_request_called == True
+    assert process_response_called == True
+    assert response.status_code == 200
