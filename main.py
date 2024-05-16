@@ -49,7 +49,7 @@ def on_exception(request, response, exc):
     response.text = str(exc)
 
 
-# app.add_exception_handler(on_exception)
+app.add_exception_handler(on_exception)
 
 
 @app.route("/exception")

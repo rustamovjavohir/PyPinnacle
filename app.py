@@ -5,10 +5,11 @@ import requests
 import wsgiadapter
 from jinja2 import Environment, FileSystemLoader
 import os
+from whitenoise import WhiteNoise
 
 
 class PyPinnacle:
-    def __init__(self, templates_dir="templates") -> None:
+    def __init__(self, templates_dir="templates", static_dir="static") -> None:
         self.routes = dict()
 
         self.templates_env = Environment(
@@ -16,9 +17,14 @@ class PyPinnacle:
         )
         self.exception_handler = None
 
+        self.whitenoise = WhiteNoise(self.wsgi_app, root=static_dir)
+
     def __call__(self, environ, start_response):
-        request = Request(environ=environ)
-        response = self.handle_request(request=request)
+        return self.whitenoise(environ, start_response)
+
+    def wsgi_app(self, environ, start_response):
+        request = Request(environ)
+        response = self.handle_request(request)
         return response(environ, start_response)
 
     def handle_request(self, request):
