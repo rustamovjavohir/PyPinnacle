@@ -2,7 +2,7 @@ import pytest
 import requests
 import wsgiadapter
 from conftest import app, test_client
-from middleware import Middleware
+from pypinnacle.middleware import Middleware
 
 
 def test_basic_route_adding(app):

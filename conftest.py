@@ -1,5 +1,5 @@
 import pytest
-from app import PyPinnacle
+from pypinnacle.app import PyPinnacle
 
 
 @pytest.fixture

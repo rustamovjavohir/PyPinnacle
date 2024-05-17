@@ -1,5 +1,5 @@
-from app import PyPinnacle
-from middleware import Middleware
+from pypinnacle.app import PyPinnacle
+from pypinnacle.middleware import Middleware
 import json
 
 app = PyPinnacle()
