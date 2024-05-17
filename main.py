@@ -1,5 +1,6 @@
 from app import PyPinnacle
 from middleware import Middleware
+import json
 
 app = PyPinnacle()
 
@@ -43,6 +44,18 @@ def template_handler(request, response):
         context={"title": "PyPinnacle", "body": "This is a template"},
     )
     response.content_type = "text/html"
+
+
+@app.route("/json")
+def json_handler(request, response):
+    response_data = {"name": "PyPinnacle", "language": "Python"}
+    response.body = json.dumps(response_data).encode()
+    response.content_type = "application/json"
+
+
+@app.route("/text")
+def text_handler(request, response):
+    response.text = "This is a plain text"
 
 
 def on_exception(request, response, exc):

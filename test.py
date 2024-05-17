@@ -11,7 +11,7 @@ def test_basic_route_adding(app):
     def home(request, response):
         response.text = "Home"
 
-    assert app.routes["/home"].get('handler') == home
+    assert app.routes["/home"].get("handler") == home
 
 
 def test_duplicate_routes_throws_exception(app):
@@ -196,3 +196,43 @@ def test_allowed_methods_for_function_based_handlers(app, test_client):
 
     assert response.status_code == 405
     assert response.text == "Method Not Allowed GET"
+
+
+def test_json_response_helper(app, test_client):
+
+    @app.route("/json")
+    def json_handler(request, response):
+        response.json = {"name": "PyPinnacle", "language": "Python"}
+
+    response = test_client.get("http://testserver/json")
+    response_data = response.json()
+
+    assert response.headers["Content-Type"] == "application/json"
+    assert response_data == {"name": "PyPinnacle", "language": "Python"}
+
+
+def test_text_response_helper(app, test_client):
+
+    @app.route("/text")
+    def text_handler(request, response):
+        response.text = "This is a plain text"
+
+    response = test_client.get("http://testserver/text")
+
+    assert "text/plain" in response.headers["Content-Type"]
+    assert response.text == "This is a plain text"
+
+
+def test_html_response_helper(app, test_client):
+
+    @app.route("/html")
+    def html_handler(request, response):
+        response.html = app.template(
+            "home.html",
+            context={"title": "PyPinnacle", "body": "This is a template"},
+        )
+
+    response = test_client.get("http://testserver/html")
+
+    assert "text/html" in response.headers["Content-Type"]
+    assert "PyPinnacle" in response.text
