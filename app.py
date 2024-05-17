@@ -18,12 +18,12 @@ class PyPinnacle:
         )
         self.exception_handler = None
 
-        self.whitenoise = WhiteNoise(self.wsgi_app, root=static_dir, prefix='/static')
+        self.whitenoise = WhiteNoise(self.wsgi_app, root=static_dir, prefix="/static")
 
         self.middleware = Middleware(self)
 
     def __call__(self, environ, start_response):
-        if environ['PATH_INFO'].startswith('/static'):
+        if environ["PATH_INFO"].startswith("/static"):
             return self.whitenoise(environ, start_response)
         return self.middleware(environ, start_response)
 
@@ -35,15 +35,20 @@ class PyPinnacle:
     def handle_request(self, request):
         response = Response()
 
-        handler, kwargs = self.find_handler(request)
+        handler_data, kwargs = self.find_handler(request)
 
-        if handler:
+        if handler_data:
+            handler = handler_data["handler"]
+            allowed_methods = handler_data["allowed_methods"]
+
             if inspect.isclass(handler):
                 handler = getattr(handler(), request.method.lower(), None)
                 if handler is None:
-                    response.status_code = 405
-                    response.text = f"Method Not Allowed {request.method}"
-                    return response
+                    return self.method_not_allowed_response(request, response)
+
+            else:
+                if request.method.lower() not in allowed_methods:
+                    return self.method_not_allowed_response(request, response)
 
             try:
                 handler(request, response, **kwargs)
@@ -56,24 +61,33 @@ class PyPinnacle:
             self.default_response(response)
         return response
 
+    def method_not_allowed_response(self, request, response):
+        response.status_code = 405
+        response.text = f"Method Not Allowed {request.method}"
+        return response
+
     def find_handler(self, request):
-        for path, handler in self.routes.items():
+        for path, handler_data in self.routes.items():
             parsed_result = parse(path, request.path)
             if parsed_result is not None:
-                return handler, parsed_result.named
+                return handler_data, parsed_result.named
         return None, None
 
     def default_response(self, response):
         response.status_code = 404
         response.text = "Not found"
 
-    def add_route(self, path, handler):
+    def add_route(self, path, handler, allowed_methods=None):
         assert path not in self.routes, f"Such route {path} already exists."
-        self.routes[path] = handler
 
-    def route(self, path):
+        if allowed_methods is None:
+            allowed_methods = ["get", "post", "put", "delete", "patch", "options"]
+
+        self.routes[path] = {"handler": handler, "allowed_methods": allowed_methods}
+
+    def route(self, path, allowed_methods=None):
         def wrapper(handler):
-            self.add_route(path, handler)
+            self.add_route(path, handler, allowed_methods)
             return handler
 
         return wrapper

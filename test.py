@@ -11,7 +11,7 @@ def test_basic_route_adding(app):
     def home(request, response):
         response.text = "Home"
 
-    assert app.routes["/home"] == home
+    assert app.routes["/home"].get('handler') == home
 
 
 def test_duplicate_routes_throws_exception(app):
@@ -184,3 +184,15 @@ def test_middleware_method_call(app, test_client):
     assert process_request_called == True
     assert process_response_called == True
     assert response.status_code == 200
+
+
+def test_allowed_methods_for_function_based_handlers(app, test_client):
+
+    @app.route("/home", allowed_methods=["post"])
+    def home(request, response):
+        response.text = "Home"
+
+    response = test_client.get("http://testserver/home")
+
+    assert response.status_code == 405
+    assert response.text == "Method Not Allowed GET"

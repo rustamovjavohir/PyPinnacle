@@ -4,7 +4,7 @@ from middleware import Middleware
 app = PyPinnacle()
 
 
-@app.route("/home")
+@app.route("/home", allowed_methods=["get"])
 def home(request, response):
     response.text = "Hello from the Home Page"
 
@@ -76,5 +76,5 @@ class GettingMiddleware(Middleware):
         print("Getting middleware response", request.url)
 
 
-app.add_middleware(LogMiddleware)
+# app.add_middleware(LogMiddleware)
 # app.add_middleware(GettingMiddleware)
