@@ -18,7 +18,7 @@ URL = "https://github.com/rustamovjavohir/PyPinnacle.git"
 EMAIL = "rustamovj366@gmail.com"
 AUTHOR = "Rustamov Javohir"
 REQUIRES_PYTHON = ">=3.9.0"
-VERSION = "0.1.1"
+VERSION = "0.1.3"
 
 # What packages are required for this module to be executed?
 REQUIRED = [
